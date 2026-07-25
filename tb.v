@@ -18,7 +18,12 @@ module tb;
     integer scalar_cycles = 0;
     integer vector_cycles = 0;
     integer total_cycles = 0;
+    
+    integer scalar_inst_count = 0;
+    integer vector_inst_count = 0;
+    
     real speedup;
+    real traffic_reduction;
 
     main uut (
         .Clk(Clk),
@@ -40,6 +45,8 @@ module tb;
         scalar_cycles = 0;
         vector_cycles = 0;
         total_cycles = 0;
+        scalar_inst_count = 0;
+        vector_inst_count = 0;
         
         for(i = 0; i < 256; i = i + 1) InstMem[i] = 0;
         for(i = 0; i < 4096; i = i + 1) DataMem[i] = 0;
@@ -136,6 +143,15 @@ module tb;
     end
 
     always @(posedge Clk) begin
+        if (!Rst && uut.W_Valid) begin
+            if (scalar_cycles == 0)
+                scalar_inst_count = scalar_inst_count + 1;
+            else if (vector_cycles == 0)
+                vector_inst_count = vector_inst_count + 1;
+        end
+    end
+
+    always @(posedge Clk) begin
         if (DataWrite) begin
             DataMem[DataAddr >> 2] <= DataOut;
         end
@@ -148,6 +164,7 @@ module tb;
         if (uut.W_PC == 32'd264 && uut.W_Valid) begin
             vector_cycles = total_cycles - scalar_cycles;
             speedup = $itor(scalar_cycles) / $itor(vector_cycles);
+            traffic_reduction = (( $itor(scalar_inst_count) - $itor(vector_inst_count) ) / $itor(scalar_inst_count)) * 100.0;
             
             $display("\n=================================================");
             $display("#          BENCHMARK & VERIFICATION RESULTS      ");
@@ -170,9 +187,13 @@ module tb;
                 $display("ERROR in Memory Arbiter: Scalar SW failed. Expected 999, Got %0d", DataMem[1539]);
 
             $display("-------------------------------------------------");
-            $display("#  Scalar Execution Cycles : %0d", scalar_cycles);
-            $display("#  Vector Execution Cycles : %0d", vector_cycles);
-            $display("#  SPEEDUP (Scalar / Vector) : %f", speedup);
+            $display("#  Scalar Execution Cycles      : %0d", scalar_cycles);
+            $display("#  Vector Execution Cycles      : %0d", vector_cycles);
+            $display("#  SPEEDUP (Scalar / Vector)    : %f", speedup);
+            $display("-------------------------------------------------");
+            $display("#  Scalar Fetched Instructions  : %0d", scalar_inst_count);
+            $display("#  Vector Fetched Instructions  : %0d", vector_inst_count);
+            $display("#  Instruction Traffic Saved    : %0.2f%%", traffic_reduction);
             $display("=================================================\n");
             $finish;
         end
