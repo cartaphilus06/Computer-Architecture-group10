@@ -5,7 +5,7 @@ This repository contains the RTL implementation of a custom Vector Processing Un
 ## Performance & Optimization Achievements
 During the evaluation and testing phases (via `tb.v`), the modified architecture demonstrated significant performance gains:
 * **Scalar/Standard Workloads:** Achieved up to a **4x speedup** for standard, non-vectorized programs through architectural optimizations.
-* **Vectorized Workloads:** Attained a **55% performance improvement** when executing fully vectorized instruction streams.
+* **Vectorized Workloads:** Attained a **55x performance improvement** when executing fully vectorized instruction streams.
 
 ## Hardware Modules
 * `VPU_Core.v`: The main control and datapath logic for the Vector Processing Unit.
